@@ -2,6 +2,7 @@ using ApplicationLayer.Contracts;
 using InfrastructureLayer.Data;
 using InfrastructureLayer.Implementations;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,13 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseCors(policy =>
+    {
+        policy.WithOrigins("https://localhost:7187")
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .WithHeaders(HeaderNames.ContentType);
+    });
 }
 
 app.UseHttpsRedirection();
