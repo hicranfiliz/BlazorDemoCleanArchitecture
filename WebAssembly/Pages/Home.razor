@@ -2,23 +2,26 @@
 @using ApplicationLayer.Services
 @using DomainLayer.Entities
 @using NetcodeHub.Packages.Components.Validations.OnInput
+@using NetcodeHub.Packages.Components.Toast
 @inject IEmployeeService emp
+@inject MudBlazor.ISnackbar Snackbar
 
 <PageTitle>Home</PageTitle>
 
 <div class="row">
     <div class="col-lg-6">
-        <EditForm Model="employee" OnInvalidSubmit="Save">
+        <EditForm Model="employee" OnValidSubmit="Save">
             <DataAnnotationsValidator />
             <FloatingText @bind-Value="employee.Name"
-                          Label="Custom FullName"
-                          Placeholder="John Doe" />
+            Label="Custom FullName"
+            Placeholder="John Doe" 
+            class="form-control mb-3"/>
             <ValidationMessage For="()=>employee.Name" />
 
             <FloatingTextArea @bind-Value="employee.Address"
-                              Label="Custom Address"
-                              Placeholder="Istanbul- Turkey"
-                              class="mb-3" />
+            Label="Custom Address"
+            Placeholder="Istanbul- Turkey"
+            class="form-control mb-3" />
             <ValidationMessage For="()=>employee.Address" />
 
             <button class="btn btn-primary mt-5 mb-5" type="submit">Save</button>
@@ -33,7 +36,20 @@
     async Task Save()
     {
         var (flag, message) = await emp.AddAsync(employee);
-        //if(flag)
+        if (!flag)
+        {
+            Snackbar.Add($"Warning: {message}", MudBlazor.Severity.Warning);
+            return;
+        }
+        else
+        {
+            Snackbar.Add($"Success: {message}", MudBlazor.Severity.Success);
+        }
 
+    }
+
+    private void ShowMessage()
+    {
+        Snackbar.Add("Successfull!", MudBlazor.Severity.Success);
     }
 }
