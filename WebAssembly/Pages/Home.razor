@@ -1,8 +1,12 @@
 ﻿@page "/"
+@using ApplicationLayer.DTOs
 @using ApplicationLayer.Services
 @using DomainLayer.Entities
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
 @using NetcodeHub.Packages.Components.Validations.OnInput
 @using NetcodeHub.Packages.Components.Toast
+@using NetcodeHub.Packages.Components.Modal
 @inject IEmployeeService emp
 @inject MudBlazor.ISnackbar Snackbar
 
@@ -13,43 +17,108 @@
         <EditForm Model="employee" OnValidSubmit="Save">
             <DataAnnotationsValidator />
             <FloatingText @bind-Value="employee.Name"
-            Label="Custom FullName"
-            Placeholder="John Doe" 
-            class="form-control mb-3"/>
+                          Label="Custom FullName"
+                          Placeholder="John Doe"
+                          class="form-control mb-3" />
             <ValidationMessage For="()=>employee.Name" />
 
             <FloatingTextArea @bind-Value="employee.Address"
-            Label="Custom Address"
-            Placeholder="Istanbul- Turkey"
-            class="form-control mb-3" />
+                              Label="Custom Address"
+                              Placeholder="Istanbul- Turkey"
+                              class="form-control mb-3" />
             <ValidationMessage For="()=>employee.Address" />
 
             <button class="btn btn-primary mt-5 mb-5" type="submit">Save</button>
         </EditForm>
     </div>
+    <div class="col-lg-6">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>NAME</th>
+                    <th>ADDRESS</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Employees is not null)
+                {
+                    foreach (var item in Employees)
+                    {
+                        <tr>
+                            <td>@item.Id</td>
+                            <td>@item.Name</td>
+                            <td>@item.Address</td>
+                            <td>
+                                <button class="btn btn-info btn-sm" @onclick="() => EditClicked(item)">Edit</button>
+                                <button class="btn btn-danger btn-sm" @onclick="() => DeleteClicked(item.Id)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+    </div>
 </div>
+
+<NetcodeHubConfirmation @ref="confirmation"
+                        Instruction="@Instruction"
+                        Action="Handle"
+                        BootstrapClass="border-danger"
+                        CustomStyle="width:300px;" />
+
 
 
 @code {
+    Confirmation? confirmation;
+    string Instruction = "Are you sure you wanna do this?";
     Employee employee = new();
 
     async Task Save()
     {
-        var (flag, message) = await emp.AddAsync(employee);
-        if (!flag)
+        var response = new ServiceResponse(false, null!);
+        if (employee.Id > 0)
+            response = await emp.UpdateAsync(employee);
+        else
+            response = await emp.AddAsync(employee);
+
+        if (!response.Flag)
         {
-            Snackbar.Add($"Warning: {message}", MudBlazor.Severity.Warning);
+            await Task.Delay(3000);
+            Snackbar.Add($"Warning: {response.Message}", MudBlazor.Severity.Warning);
             return;
         }
         else
         {
-            Snackbar.Add($"Success: {message}", MudBlazor.Severity.Success);
+            await Task.Delay(3000);
+            Snackbar.Add($"Success: {response.Message}", MudBlazor.Severity.Success);
         }
 
     }
 
-    private void ShowMessage()
+    List<Employee> Employees = new();
+    protected override async Task OnInitializedAsync() => await GetData();
+
+    private async Task GetData() => Employees = await emp.GetAsync();
+
+    async void EditClicked(Employee incomeEmp) => employee = incomeEmp;
+
+    async void DeleteClicked(int id)
     {
-        Snackbar.Add("Successfull!", MudBlazor.Severity.Success);
+        DeleteId = id;
+        await confirmation!.Show();
+
+    }
+
+    public int DeleteId { get; set; }
+    async void Handle()
+    {
+        if (DeleteId == 0) return;
+        var (flag, message) = await emp.DeleteAsync(DeleteId);
+        await GetData();
+        DeleteId = 0;
+        StateHasChanged();
     }
 }

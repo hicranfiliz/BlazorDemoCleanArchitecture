@@ -12,7 +12,7 @@ namespace ApplicationLayer.Services
 
         // this is presentation layer so we have to use an http client here.
         // from presentation layer to post a message to api, this is going to drive the interface 
-        // from the applicateion layer and appl.layer get data from the domain layer to acces data from the infrastructe layer.
+        // from the application layer and appl.layer get data from the domain layer to acces data from the infrastructe layer.
         public EmployeeService(HttpClient httpClient)
         {
             this.httpClient = httpClient;

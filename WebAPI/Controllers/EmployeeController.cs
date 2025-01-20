@@ -1,5 +1,7 @@
 ﻿using ApplicationLayer.Contracts;
+using ApplicationLayer.Queries.EmployeeQuery;
 using DomainLayer.Entities;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -11,29 +13,20 @@ namespace WebAPI.Controllers
     public class EmployeeController : ControllerBase
     {
         private readonly IEmployee employee;
+        private readonly IMediator mediator;
 
-        public EmployeeController(IEmployee employee)
+        public EmployeeController(IEmployee employee, IMediator mediator)
         {
             this.employee = employee;
+            this.mediator = mediator;
         }
 
-        // GET: api/<EmployeeController>
         [HttpGet]
-        public async Task<IActionResult> Get()
-        {
-            var data = await employee.GetAsync();
-            return Ok(data);    
-        }
+        public async Task<IActionResult> Get() => Ok(await mediator.Send(new GetEmployeeListQuery()));
 
-        // GET api/<EmployeeController>/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var data = await employee.GetByIdAsync(id);
-            return Ok(data);    
-        }
+        public async Task<IActionResult> GetById(int id) => Ok(await mediator.Send(new GetEmployeeByIdQuery { Id = id }));
 
-        // POST api/<EmployeeController>
         [HttpPost]
         public async Task<IActionResult> Add([FromBody] Employee employeeDto)
         {
@@ -41,7 +34,6 @@ namespace WebAPI.Controllers
             return Ok(result);
         }
 
-        // PUT api/<EmployeeController>/5
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] Employee employeeDto)
         {
@@ -49,7 +41,6 @@ namespace WebAPI.Controllers
             return Ok(result);  
         }
 
-        // DELETE api/<EmployeeController>/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
