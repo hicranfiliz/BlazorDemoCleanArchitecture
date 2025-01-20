@@ -1,7 +1,9 @@
 ﻿using ApplicationLayer.Commands;
 using ApplicationLayer.DTOs;
+using DomainLayer.Entities;
 using InfrastructureLayer.Data;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,9 +20,16 @@ namespace InfrastructureLayer.Handlers.EmployeeHandler
         {
             this._appDbContext = appDbContext;
         }
-        public Task<ServiceResponse> Handle(CreateEmployeeCommand request, CancellationToken cancellationToken)
+        public async Task<ServiceResponse> Handle(CreateEmployeeCommand request, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var check = await _appDbContext.Employees
+                .FirstOrDefaultAsync(x => x.Name.ToLower() == request.Employee.Name.ToLower());
+            if (check != null)
+                return new ServiceResponse(false, "User already exists!");
+
+            _appDbContext.Employees.Add(request.Employee);
+            await _appDbContext.SaveChangesAsync();
+            return new ServiceResponse(true, "Added Employee");
         }
     }
 }
